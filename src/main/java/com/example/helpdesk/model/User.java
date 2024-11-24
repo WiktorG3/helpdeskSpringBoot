@@ -1,10 +1,11 @@
-package model;
+package com.example.helpdesk.model;
 
 import jakarta.persistence.*;
 
 import java.util.List;
 
 @Entity
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
