@@ -17,7 +17,7 @@ public class Event {
     private boolean completed;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user", nullable = false)
     private User user;
 
     public Long getId() {

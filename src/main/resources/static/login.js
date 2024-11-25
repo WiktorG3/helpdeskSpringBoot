@@ -1,31 +1,21 @@
-document.getElementById("registerForm").addEventListener("submit", async function (event) {
+document.getElementById("loginForm").addEventListener("submit", async function (event) {
     event.preventDefault();
+
     const username = document.getElementById("username").value;
-    const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
 
-    const passwordError = document.getElementById("message");
-    if (password !== confirmPassword) {
-        passwordError.textContent = "Passwords do not match!";
-        return;
-    } else {
-        passwordError.textContent = "";
-    }
-
-    const userData = {
+    const loginData = {
         username: username,
-        email: email,
         password: password
     };
 
     try {
-        const response = await fetch("http://localhost:8080/api/register", {
+        const response = await fetch("http://localhost:8080/api/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(userData),
+            body: JSON.stringify(loginData),
         });
 
         const message = document.getElementById("message");
@@ -33,7 +23,7 @@ document.getElementById("registerForm").addEventListener("submit", async functio
             const result = await response.text();
             message.style.color = "green";
             message.textContent = `Success: ${result}`;
-            setTimeout(() => { window.location.href = "login.html";}, 500);
+            setTimeout(() => { window.location.href = "dashboard.html";}, 500);
         } else {
             const error = await response.text();
             message.style.color = "red";
