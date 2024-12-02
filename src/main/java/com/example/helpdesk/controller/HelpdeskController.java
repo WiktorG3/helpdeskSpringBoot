@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 
+import java.util.List;
+
 @Controller
 public class HelpdeskController {
     @Autowired
@@ -34,6 +36,28 @@ public class HelpdeskController {
     @GetMapping("/dashboard")
     public String dashboard() {
         return "dashboard";
+    }
+
+    @GetMapping("/addEvent")
+    public String addEvent() {
+        return "addEvent";
+    }
+
+    @GetMapping("/view_events")
+    public String viewEvents() {
+        return "viewEvents";
+    }
+
+    @GetMapping("/edit_event")
+    public String editEvent() {
+        return "editEvent";
+    }
+
+    @GetMapping("/viewUsers")
+    public String users(Model model) {
+        List<User> users = userRepository.findAll();
+        model.addAttribute("users", users);
+        return "viewUsers";
     }
 
     @PostMapping("/register")

@@ -1,107 +1,87 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Helpdesk Dashboard</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f9;
-      color: #333;
-    }
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="navbar-brand">
+        <h1>Helpdesk Dashboard</h1>
+      </div>
+      <nav class="navbar-menu">
+        <ul>
+          <li><a th:href="@{/register}">Register</a></li>
+          <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+          <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
+          <li><a th:href="@{/viewUsers}">Users</a></li>
+          <li class="dropdown">
+            <a href="#">Events</a>
+            <ul class="dropdown-menu">
+              <li><a th:href="@{/addEvent}">Add</a></li>
+              <li><a th:href="@{/editEvent}">Edit</a></li>
+              <li><a th:href="@{/viewEvents}">View</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </header>
 
-    header {
-      background-color: #007BFF;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
+    <main class="dashboard">
+      <div class="welcome-section">
+        <h2>Welcome User!</h2>
+        <p>What brings you here today?</p>
+      </div>
 
-    main {
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+      <div class="stats-container">
+        <div class="stat-card active">
+          <span class="number">6</span>
+          <span class="label">Active</span>
+        </div>
+        <div class="stat-card open">
+          <span class="number">3</span>
+          <span class="label">Open</span>
+        </div>
+        <div class="stat-card in-progress">
+          <span class="number">1</span>
+          <span class="label">In Progress</span>
+        </div>
+        <div class="stat-card resolved">
+          <span class="number">2</span>
+          <span class="label">Resolved</span>
+        </div>
+        <div class="stat-card closed">
+          <span class="number">1</span>
+          <span class="label">Closed</span>
+        </div>
+        <div class="stat-card reopened">
+          <span class="number">0</span>
+          <span class="label">Reopened</span>
+        </div>
+      </div>
 
-    .card-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-    }
+      <div class="card-container">
+        <div class="card">
+          <h3>Add Event</h3>
+          <p>Create a new event</p>
+          <a th:href="@{/addEvent}" class="card-button">Go to Add Event</a>
+        </div>
 
-    .card {
-      width: 250px;
-      padding: 20px;
-      background-color: white;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      transition: transform 0.3s, box-shadow 0.3s;
-      cursor: pointer;
-    }
+        <div class="card">
+          <h3>Edit Event</h3>
+          <p>Modify or update your existing events</p>
+          <a th:href="@{/editEvent}" class="card-button">Go to Edit Event</a>
+        </div>
 
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .card h3 {
-      color: #007BFF;
-      margin-bottom: 10px;
-    }
-
-    .card p {
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    .card a {
-      text-decoration: none;
-      color: white;
-      background-color: #007BFF;
-      padding: 10px 15px;
-      border-radius: 5px;
-    }
-
-    .card a:hover {
-      background-color: #0056b3;
-    }
-  </style>
-</head>
-<body>
-<header>
-  <h1>Helpdesk Dashboard</h1>
-</header>
-<main>
-  <h2>Welcome User!</h2>
-  <p>What brings you here today</p>
-
-  <div class="card-container">
-    <div class="card">
-      <h3>Add Event</h3>
-      <p>Create a new event</p>
-      <a href="addEvent.html">Go to Add Event</a>
-    </div>
-
-    <div class="card">
-      <h3>Edit Event</h3>
-      <p>Modify or update your existing events</p>
-      <a href="editEvent.html">Go to Edit Event</a>
-    </div>
-
-    <div class="card">
-      <h3>View Events</h3>
-      <p>See a full list of all events</p>
-      <a href="viewEvents.html">Go to View Events</a>
-    </div>
-  </div>
-</main>
-</body>
+        <div class="card">
+          <h3>View Events</h3>
+          <p>See a full list of all events</p>
+          <a th:href="@{/viewEvent}" class="card-button">Go to View Events</a>
+        </div>
+      </div>
+    </main>
+  </body>
 </html>

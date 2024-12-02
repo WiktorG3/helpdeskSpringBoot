@@ -1,10 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adding Event - Helpdesk Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+<header class="navbar">
+    <div class="navbar-brand">
+        <h1>Helpdesk Dashboard</h1>
+    </div>
+    <nav class="navbar-menu">
+        <ul>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
+            <li><a th:href="@{/viewUsers}">Users</a></li>
+            <li class="dropdown">
+                <a href="#">Events</a>
+                <ul class="dropdown-menu">
+                    <li><a th:href="@{/addEvent}">Add</a></li>
+                    <li><a th:href="@{/editEvent}">Edit</a></li>
+                    <li><a th:href="@{/viewEvents}">View</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
 
+<main class="dashboard">
+    <div class="page-header">
+        <h2>Add Event</h2>
+    </div>
+
+    <div class="form-container">
+        <form id="addEventForm" th:action="@{/addEvent}" method="post" class="event-form">
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <select id="category" name="category" required>
+                    <option value="network">Network</option>
+                    <option value="hardware">Hardware</option>
+                    <option value="software">Software</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="4" required></textarea>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="emergency" name="emergency">
+                <label for="emergency">Emergency</label>
+            </div>
+            <div class="form-group">
+                <label for="detectionDate">Detection Date:</label>
+                <input type="date" id="detectionDate" name="detectionDate" required>
+            </div>
+            <div class="form-group">
+                <label for="downtime">Downtime (in hours):</label>
+                <input type="number" id="downtime" name="downtime" min="0" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="submit-button">Submit</button>
+            </div>
+        </form>
+    </div>
+</main>
 </body>
 </html>

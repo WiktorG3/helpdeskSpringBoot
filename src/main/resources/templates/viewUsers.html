@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Users - Helpdesk Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<header class="navbar">
+    <div class="navbar-brand">
+        <h1>Helpdesk Dashboard</h1>
+    </div>
+    <nav class="navbar-menu">
+        <ul>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
+            <li><a th:href="@{/users}">Users</a></li>
+            <li class="dropdown">
+                <a href="#">Events</a>
+                <ul class="dropdown-menu">
+                    <li><a th:href="@{/addEvent}">Add</a></li>
+                    <li><a th:href="@{/editEvent}">Edit</a></li>
+                    <li><a th:href="@{/viewEvents}">View</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<main class="dashboard">
+    <div class="page-header">
+        <h2>User Management</h2>
+        <p>View and manage registered users</p>
+    </div>
+
+    <div class="data-grid-container">
+        <div class="data-grid-header">
+            <div class="search-box">
+                <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterTable()">
+            </div>
+        </div>
+
+        <div class="data-grid-wrapper">
+            <table class="data-grid">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Name</th>
+                    <th>Surname</th>
+                    <th>Permissions</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.username}"></td>
+                    <td>••••••••</td>
+<!--                    //<td th:text="${user.name}"></td>-->
+<!--                    <td th:text="${user.surname}"></td>-->
+<!--                    <td th:text="${user.permissions}"></td>-->
+                    <td>
+<!--                                <span th:class="${user.active ? 'status-badge active' : 'status-badge inactive'}"-->
+<!--                                      th:text="${user.active ? 'Active' : 'Inactive'}">-->
+                                </span>
+                    </td>
+                    <td class="actions">
+                        <button class="action-button edit" th:onclick="'editUser(' + ${user.id} + ')'">Edit</button>
+                        <button class="action-button delete" th:onclick="'deleteUser(' + ${user.id} + ')'">Delete</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    function filterTable() {
+        const input = document.getElementById('userSearch');
+        const filter = input.value.toLowerCase();
+        const table = document.querySelector('.data-grid');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            let show = false;
+            const cells = rows[i].getElementsByTagName('td');
+            for (let cell of cells) {
+                if (cell.textContent.toLowerCase().indexOf(filter) > -1) {
+                    show = true;
+                    break;
+                }
+            }
+            rows[i].style.display = show ? '' : 'none';
+        }
+    }
+
+    function editUser(id) {
+        window.location.href = '/editUser/' + id;
+    }
+
+    function deleteUser(id) {
+        if (confirm('Are you sure you want to delete this user?')) {
+            fetch('/api/users/' + id, { method: 'DELETE' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Error deleting user');
+                    }
+                });
+        }
+    }
+</script>
+</body>
+</html>
