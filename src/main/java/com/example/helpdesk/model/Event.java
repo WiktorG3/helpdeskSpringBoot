@@ -2,7 +2,13 @@ package com.example.helpdesk.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
+@Table(name = "events")
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,14 +23,20 @@ public class Event {
     @Column(nullable = false)
     private String description;
 
+    @Column(nullable = false)
     private boolean emergency;
 
+    @Column(nullable = false)
+    private LocalDate detectionDate;
+
+    @Column(nullable = false)
+    private Integer downtime;
+
+    @Column(nullable = false)
     private boolean completed;
 
-    private String date;
-
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     public Long getId() {
@@ -75,12 +87,12 @@ public class Event {
         this.completed = completed;
     }
 
-    public String getDate() {
-        return date;
+    public LocalDate getDetectionDate() {
+        return detectionDate;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public void setDetectionDate(LocalDate detectionDate) {
+        this.detectionDate = detectionDate;
     }
 
     public User getUser() {
@@ -89,5 +101,17 @@ public class Event {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Integer getDowntime() {
+        return downtime;
+    }
+
+    public void setDowntime(Integer downtime) {
+        this.downtime = downtime;
+    }
+
+    public String getUsername() {
+        return user != null ? user.getUsername() : null;
     }
 }

@@ -36,7 +36,7 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.navbar-brand h1 {
+.navbar-brand h1 a {
     font-size: 1.5rem;
     font-weight: 600;
 }
@@ -59,8 +59,18 @@ body {
 .navbar-menu a:hover {
     background-color: var(--primary-light);
 }
+.navbar-brand h1 a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
 
-/* Dropdown Styles */
+.navbar-brand h1 a:hover {
+    opacity: 0.9;
+}
+
 .dropdown {
     position: relative;
 }

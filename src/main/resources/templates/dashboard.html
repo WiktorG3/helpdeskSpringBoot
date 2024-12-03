@@ -10,7 +10,7 @@
   <body>
     <header class="navbar">
       <div class="navbar-brand">
-        <h1>Helpdesk Dashboard</h1>
+        <h1><a th:href="@{/dashboard}">Helpdesk Dashboard</a></h1>
       </div>
       <nav class="navbar-menu">
         <ul>
@@ -79,7 +79,7 @@
         <div class="card">
           <h3>View Events</h3>
           <p>See a full list of all events</p>
-          <a th:href="@{/viewEvent}" class="card-button">Go to View Events</a>
+          <a th:href="@{/viewEvents}" class="card-button">Go to View Events</a>
         </div>
       </div>
     </main>
