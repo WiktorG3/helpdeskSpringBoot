@@ -78,6 +78,7 @@ public class HelpdeskController {
         user.setUsername(username);
         user.setName(name);
         user.setSurname(surname);
+        user.setRole("user");
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
         model.addAttribute("message", "User registered successfully");

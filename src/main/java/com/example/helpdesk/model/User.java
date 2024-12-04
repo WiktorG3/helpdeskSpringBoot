@@ -27,6 +27,9 @@ public class User {
     @Column(nullable = false)
     private String surname;
 
+    @Column(nullable = false)
+    private String role;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Event> events = new ArrayList<>();
 
@@ -76,6 +79,14 @@ public class User {
 
     public void setSurname(String surname) {
         this.surname = surname;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public List<Event> getEvents() {
