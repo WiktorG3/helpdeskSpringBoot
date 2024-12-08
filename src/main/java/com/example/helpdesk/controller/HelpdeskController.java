@@ -1,14 +1,17 @@
 package com.example.helpdesk.controller;
 
+import com.example.helpdesk.dto.UserRegistrationDTO;
 import com.example.helpdesk.model.Event;
 import com.example.helpdesk.model.User;
 import com.example.helpdesk.repository.EventRepository;
 import com.example.helpdesk.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 
@@ -29,7 +32,8 @@ public class HelpdeskController {
 
 
     @GetMapping("/register")
-    public String register() {
+    public String register(Model model) {
+        model.addAttribute("userDto", new UserRegistrationDTO());
         return "register";
     }
 
@@ -68,19 +72,32 @@ public class HelpdeskController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestParam String email, @RequestParam String username, @RequestParam String name, @RequestParam String surname, @RequestParam String password, Model model) {
-        if(userRepository.findByUsername(username).isPresent()){
-            model.addAttribute("message", "Username already exists");
+    public String register(@Valid @ModelAttribute("userDto") UserRegistrationDTO userDto,
+                           BindingResult result,
+                           Model model) {
+        if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
+            result.rejectValue("confirmPassword", "error.userDto", "Passwords do not match");
+        }
+
+        if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
+            result.rejectValue("username", "error.userDto", "Username already exists");
+        }
+        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+            result.rejectValue("email", "error.userDto", "Email already exists");
+        }
+        if (result.hasErrors()) {
             return "register";
         }
+
         User user = new User();
-        user.setEmail(email);
-        user.setUsername(username);
-        user.setName(name);
-        user.setSurname(surname);
+        user.setEmail(userDto.getEmail());
+        user.setUsername(userDto.getUsername());
+        user.setName(userDto.getName());
+        user.setSurname(userDto.getSurname());
         user.setRole("user");
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         userRepository.save(user);
+
         model.addAttribute("message", "User registered successfully");
         return "redirect:/login";
     }
