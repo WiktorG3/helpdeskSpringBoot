@@ -14,27 +14,34 @@
       </div>
       <nav class="navbar-menu">
         <ul>
-          <li><a th:href="@{/admin}" th:if="${#authorization.expression('hasRole(''admin'')')}">Admin</a></li>
+          <li class="dropdown" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+            <a href="#" class="dropbutton">Admin</a>
+            <div class="dropdown-content">
+              <a th:href="@{/admin/resolveEvents}">Resolve Events</a>
+              <a th:href="@{/admin/editPermissions}">Edit Permissions</a>
+              <a th:href="@{/admin/editUsers}">Edit Users</a>
+              <a th:href="@{/admin/printResults}">Print Results</a>
+            </div>
+          </li>
           <li><a th:href="@{/register}">Register</a></li>
           <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
           <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
           <li><a th:href="@{/viewUsers}">Users</a></li>
-
           <li class="dropdown">
-            <a href="#">Events</a>
-            <ul class="dropdown-menu">
-              <li><a th:href="@{/addEvent}">Add</a></li>
-              <li><a th:href="@{/editEvent}">Edit</a></li>
-              <li><a th:href="@{/viewEvents}">View</a></li>
-            </ul>
+            <a href="#" class="dropbutton">Events</a>
+            <div class="dropdown-content">
+              <a th:href="@{/addEvent}">Add</a>
+              <a th:href="@{/userEvents}">Your Events</a>
+              <a th:href="@{/viewEvents}">All Events</a>
+            </div>
           </li>
         </ul>
       </nav>
+      <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
     </header>
-
     <main class="dashboard">
       <div class="welcome-section">
-        <h2>Welcome User!</h2>
+        <h2>Welcome <span th:text="${#authentication.name}">User</span>!</h2>
         <p>What brings you here today?</p>
       </div>
 
@@ -73,9 +80,9 @@
         </div>
 
         <div class="card">
-          <h3>Edit Event</h3>
+          <h3>Your Events</h3>
           <p>Modify or update your existing events</p>
-          <a th:href="@{/editEvent}" class="card-button">Go to Edit Event</a>
+          <a th:href="@{/userEvents}" class="card-button">Go to Your Events</a>
         </div>
 
         <div class="card">
@@ -85,5 +92,15 @@
         </div>
       </div>
     </main>
+    <script>
+      function toggleNavbar() {
+        let x = document.querySelector(".navbar-menu");
+        if (x.style.display === "block") {
+          x.style.display = "none";
+        } else {
+          x.style.display = "block";
+        }
+      }
+    </script>
   </body>
 </html>

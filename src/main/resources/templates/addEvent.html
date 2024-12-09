@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adding Event - Helpdesk Dashboard</title>
+    <title>Helpdesk Dashboard</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
 <header class="navbar">
     <div class="navbar-brand">
@@ -14,20 +15,22 @@
     </div>
     <nav class="navbar-menu">
         <ul>
+            <li><a th:href="@{/admin}" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">Admin</a></li>
             <li><a th:href="@{/register}">Register</a></li>
             <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
             <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
             <li><a th:href="@{/viewUsers}">Users</a></li>
             <li class="dropdown">
-                <a href="#">Events</a>
-                <ul class="dropdown-menu">
-                    <li><a th:href="@{/addEvent}">Add</a></li>
-                    <li><a th:href="@{/editEvent}">Edit</a></li>
-                    <li><a th:href="@{/viewEvents}">View</a></li>
-                </ul>
+                <a href="#" class="dropbutton">Events</a>
+                <div class="dropdown-content">
+                    <a th:href="@{/addEvent}">Add</a>
+                    <a th:href="@{/userEvents}">Your Events</a>
+                    <a th:href="@{/viewEvents}">All Events</a>
+                </div>
             </li>
         </ul>
     </nav>
+    <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
 </header>
 
 <main class="dashboard">
@@ -71,6 +74,28 @@
 
         </form>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const detectionDateInput = document.getElementById("detectionDate");
+            detectionDateInput.min = "2020-01-01";
+
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            detectionDateInput.max = todayString;
+
+            detectionDateInput.value = todayString;
+        });
+    </script>
 </main>
+<script>
+    function toggleNavbar() {
+        let x = document.querySelector(".navbar-menu");
+        if (x.style.display === "block") {
+            x.style.display = "none";
+        } else {
+            x.style.display = "block";
+        }
+    }
+</script>
 </body>
 </html>

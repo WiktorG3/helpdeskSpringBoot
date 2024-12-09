@@ -1,10 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helpdesk Dashboard - Edit Event</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+<header class="navbar">
+    <div class="navbar-brand">
+        <h1><a th:href="@{/dashboard}">Helpdesk Dashboard</a></h1>
+    </div>
+    <nav class="navbar-menu">
+        <ul>
+            <li class="dropdown" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+                <a href="#" class="dropbutton">Admin</a>
+                <div class="dropdown-content">
+                    <a th:href="@{/admin/resolveEvents}">Resolve Events</a>
+                    <a th:href="@{/admin/editPermissions}">Edit Permissions</a>
+                    <a th:href="@{/admin/editUsers}">Edit Users</a>
+                    <a th:href="@{/admin/printResults}">Print Results</a>
+                </div>
+            </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
+            <li><a th:href="@{/viewUsers}">Users</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbutton">Events</a>
+                <div class="dropdown-content">
+                    <a th:href="@{/addEvent}">Add</a>
+                    <a th:href="@{/userEvents}">Your Events</a>
+                    <a th:href="@{/viewEvents}">View All</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+    <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
+</header>
 
+<main class="dashboard">
+    <div class="page-header">
+        <h2>Edit Event</h2>
+    </div>
+
+    <div class="form-container">
+        <form th:action="@{/editEvent/{id}(id=${event.id})}" th:object="${event}" method="post" class="event-form">
+            <input type="hidden" th:field="*{id}">
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <select id="category" th:field="*{category}" required>
+                    <option value="network">Network</option>
+                    <option value="hardware">Hardware</option>
+                    <option value="software">Software</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" th:field="*{title}" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" th:field="*{description}" rows="4" required></textarea>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="emergency" th:field="*{emergency}">
+                <label for="emergency">Emergency</label>
+            </div>
+            <div class="form-group">
+                <label for="detectionDate">Detection Date:</label>
+                <input type="date" id="detectionDate" name="detectionDate" th:value="${formattedDate}" required>
+            </div>
+            <div class="form-group">
+                <label for="downtime">Downtime (in hours):</label>
+                <input type="number" id="downtime" th:field="*{downtime}" min="0" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="submit-button">Update Event</button>
+                <a th:href="@{/userEvents}" class="cancel-button">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        const detectionDateInput = document.getElementById("detectionDate");
+        detectionDateInput.min = "2020-01-01";
+
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+        detectionDateInput.max = todayString;
+    });
+
+    function toggleNavbar() {
+        let x = document.querySelector(".navbar-menu");
+        if (x.style.display === "block") {
+            x.style.display = "none";
+        } else {
+            x.style.display = "block";
+        }
+    }
+</script>
 </body>
 </html>

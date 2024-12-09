@@ -7,15 +7,20 @@ import com.example.helpdesk.repository.EventRepository;
 import com.example.helpdesk.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,9 +64,63 @@ public class HelpdeskController {
         return "viewEvents";
     }
 
-    @GetMapping("/edit_event")
-    public String editEvent() {
-        return "editEvent";
+    @GetMapping("/userEvents")
+    public String userEvents(Model model, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            List<Event> userEvents = eventRepository.findByUser(user);
+            model.addAttribute("events", userEvents);
+        }
+        return "userEvents";
+    }
+
+    @GetMapping("/editEvent/{id}")
+    public String editEvent(@PathVariable Long id, Model model, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            Event event = eventRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+            if (event.getUser().getId().equals(user.getId())) {
+                model.addAttribute("event", event);
+                model.addAttribute("formattedDate", event.getDetectionDate().format(DateTimeFormatter.ISO_DATE));
+                return "editEvent";
+            }
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to edit this event");
+    }
+    @PostMapping("/editEvent/{id}")
+    public String updateEvent(@PathVariable("id") Long id,
+                              @ModelAttribute Event updatedEvent,
+                              @RequestParam("detectionDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate detectionDate,
+                              Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            Event event = eventRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+            if (event.getUser().getId().equals(user.getId())) {
+                event.setCategory(updatedEvent.getCategory());
+                event.setTitle(updatedEvent.getTitle());
+                event.setDescription(updatedEvent.getDescription());
+                event.setEmergency(updatedEvent.isEmergency());
+                event.setDetectionDate(detectionDate);
+                event.setDowntime(updatedEvent.getDowntime());
+
+                eventRepository.save(event);
+                return "redirect:/userEvents";
+            }
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to edit this event");
     }
 
     @GetMapping("/viewUsers")
