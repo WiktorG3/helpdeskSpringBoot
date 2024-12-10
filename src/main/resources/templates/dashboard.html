@@ -17,10 +17,9 @@
           <li class="dropdown" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
             <a href="#" class="dropbutton">Admin</a>
             <div class="dropdown-content">
-              <a th:href="@{/admin/resolveEvents}">Resolve Events</a>
-              <a th:href="@{/admin/editPermissions}">Edit Permissions</a>
-              <a th:href="@{/admin/editUsers}">Edit Users</a>
-              <a th:href="@{/admin/printResults}">Print Results</a>
+              <a th:href="@{/resolveEvents}">Resolve Events</a>
+              <a th:href="@{/editUsers}">Edit Users</a>
+              <a th:href="@{/printResults}">Print Results</a>
             </div>
           </li>
           <li><a th:href="@{/register}">Register</a></li>

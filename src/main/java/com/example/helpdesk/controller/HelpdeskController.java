@@ -18,6 +18,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -191,5 +192,51 @@ public class HelpdeskController {
         eventRepository.save(event);
         model.addAttribute("message", "Event added successfully");
         return "redirect:/viewEvents";
+    }
+
+    @GetMapping("/editUsers")
+    public String editUsers(Model model) {
+        List<User> users = userRepository.findAll();
+        model.addAttribute("users", users);
+        return "editUsers";
+    }
+
+    @GetMapping("/editUsers/{username}")
+    public String editUser(@PathVariable String username, Model model) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        model.addAttribute("user", user);
+        return "editUser";
+    }
+
+    @PostMapping("/editUsers")
+    public String updateUser(@RequestParam String originalUsername,
+                             @RequestParam String username,
+                             @RequestParam String name,
+                             @RequestParam String surname,
+                             @RequestParam String email,
+                             @RequestParam String role,
+                             @RequestParam(required = false) String newPassword,
+                             RedirectAttributes redirectAttributes) {
+        User user = userRepository.findByUsername(originalUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        user.setUsername(username);
+        user.setName(name);
+        user.setSurname(surname);
+        user.setEmail(email);
+        user.setRole(role);
+
+        if (newPassword != null && !newPassword.isEmpty()) {
+            if (newPassword.length() < 6) {
+                redirectAttributes.addFlashAttribute("error", "New password must be at least 6 characters long");
+                return "redirect:/editUsers/" + originalUsername;
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
+        }
+
+        userRepository.save(user);
+        redirectAttributes.addFlashAttribute("success", "User updated successfully");
+        return "redirect:/editUsers";
     }
 }

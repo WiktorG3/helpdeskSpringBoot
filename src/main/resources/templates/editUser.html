@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Helpdesk Dashboard - Edit Event</title>
+    <title>Helpdesk Dashboard - Edit User</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -41,58 +41,51 @@
 
 <main class="dashboard">
     <div class="page-header">
-        <h2>Edit Event</h2>
+        <h2>Edit User</h2>
     </div>
 
     <div class="form-container">
-        <form th:action="@{/editEvent/{id}(id=${event.id})}" th:object="${event}" method="post" class="event-form">
-            <input type="hidden" th:field="*{id}">
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+        <div th:if="${success}" class="success-message" th:text="${success}"></div>
+        <form th:action="@{/editUsers}" method="post" class="user-form">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+            <input type="hidden" id="originalUsername" name="originalUsername" th:value="${user.username}">
             <div class="form-group">
-                <label for="category">Category:</label>
-                <select id="category" th:field="*{category}" required>
-                    <option value="network">Network</option>
-                    <option value="hardware">Hardware</option>
-                    <option value="software">Software</option>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" th:value="${user.username}" required>
+            </div>
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" th:value="${user.name}" required>
+            </div>
+            <div class="form-group">
+                <label for="surname">Surname:</label>
+                <input type="text" id="surname" name="surname" th:value="${user.surname}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" th:value="${user.email}" required>
+            </div>
+            <div class="form-group">
+                <label for="role">Role:</label>
+                <select id="role" name="role" required>
+                    <option value="user" th:selected="${user.role == 'user'}">User</option>
+                    <option value="admin" th:selected="${user.role == 'admin'}">Admin</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="title">Title:</label>
-                <input type="text" id="title" th:field="*{title}" required>
+                <label for="newPassword">New Password (leave blank to keep current, min 6 characters):</label>
+                <input type="password" id="newPassword" name="newPassword" minlength="6">
             </div>
             <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea id="description" th:field="*{description}" rows="4" required></textarea>
-            </div>
-            <div class="form-group checkbox-group">
-                <input type="checkbox" id="emergency" th:field="*{emergency}">
-                <label for="emergency">Emergency</label>
-            </div>
-            <div class="form-group">
-                <label for="detectionDate">Detection Date:</label>
-                <input type="date" id="detectionDate" name="detectionDate" th:value="${formattedDate}" required>
-            </div>
-            <div class="form-group">
-                <label for="downtime">Downtime (in hours):</label>
-                <input type="number" id="downtime" th:field="*{downtime}" min="0" required>
-            </div>
-            <div class="form-group">
-                <button type="submit" class="submit-button">Update Event</button>
-                <a th:href="@{/userEvents}" class="cancel-button">Cancel</a>
+                <button type="submit" class="submit-button">Update User</button>
+                <a th:href="@{/editUsers}" class="cancel-button">Cancel</a>
             </div>
         </form>
     </div>
 </main>
 
-<script th:inline="javascript">
-    document.addEventListener("DOMContentLoaded", function () {
-        const detectionDateInput = document.getElementById("detectionDate");
-        detectionDateInput.min = "2020-01-01";
-
-        const today = new Date();
-        const todayString = today.toISOString().split('T')[0];
-        detectionDateInput.max = todayString;
-    });
-
+<script>
     function toggleNavbar() {
         let x = document.querySelector(".navbar-menu");
         if (x.style.display === "block") {
@@ -104,3 +97,4 @@
 </script>
 </body>
 </html>
+

@@ -366,6 +366,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+
 }
 
 .auth-form label {
@@ -595,6 +596,7 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.3s;
+    text-decoration: none;
 }
 
 .action-button.edit {
