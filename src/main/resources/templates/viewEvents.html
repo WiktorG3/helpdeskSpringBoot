@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Helpdesk Dashboard</title>
+    <title>View Events - Helpdesk Dashboard</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -42,7 +42,7 @@
 
 <main class="dashboard">
     <div class="page-header">
-        <h2>All Events</h2>
+        <h2>View Events</h2>
         <p>View all reported events</p>
     </div>
 
@@ -76,6 +76,9 @@
                     <th>Emergency</th>
                     <th>Detection Date</th>
                     <th>Downtime</th>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>Action</th>
                 </tr>
                 </thead>
                 <tbody id="eventTableBody">
@@ -91,12 +94,31 @@
                     </td>
                     <td th:text="${#temporals.format(event.detectionDate, 'yyyy-MM-dd')}"></td>
                     <td th:text="${event.downtime + ' hours'}"></td>
+                    <td th:text="${event.user.username}"></td>
+                    <td>
+                        <span th:class="'status-badge ' + ${event.status.name().toLowerCase()}" th:text="${event.status}"></span>
+                    </td>
+                    <td>
+                        <button th:if="${event.status.name() == 'RESOLVED'}"
+                                class="action-button view-comment"
+                                th:data-event-id="${event.id}">
+                            View Comment
+                        </button>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </main>
+
+<div id="commentModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Comment</h2>
+        <p id="commentContent"></p>
+    </div>
+</div>
 
 <script th:inline="javascript">
     function filterTable() {
@@ -117,6 +139,34 @@
             rows[i].style.display = show ? '' : 'none';
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('commentModal');
+        const span = document.getElementsByClassName('close')[0];
+        const commentContent = document.getElementById('commentContent');
+
+        document.querySelectorAll('.view-comment').forEach(button => {
+            button.addEventListener('click', function() {
+                const eventId = this.getAttribute('data-event-id');
+                fetch(`/viewComment/${eventId}`)
+                    .then(response => response.text())
+                    .then(data => {
+                        commentContent.textContent = data;
+                        modal.style.display = 'block';
+                    });
+            });
+        });
+
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         const dateFromInput = document.getElementById('dateFrom');

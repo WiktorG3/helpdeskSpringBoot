@@ -1,10 +1,223 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helpdesk Dashboard - Resolve Events</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+<header class="navbar">
+    <div class="navbar-brand">
+        <h1><a th:href="@{/dashboard}">Helpdesk Dashboard</a></h1>
+    </div>
+    <nav class="navbar-menu">
+        <ul>
+            <li class="dropdown" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+                <a href="#" class="dropbtn">Admin</a>
+                <div class="dropdown-content">
+                    <a th:href="@{/resolveEvents}">Resolve Events</a>
+                    <a th:href="@{/editUsers}">Edit Users</a>
+                    <a th:href="@{/printResults}">Print Results</a>
+                </div>
+            </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
+            <li><a th:href="@{/viewUsers}">Users</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">Events</a>
+                <div class="dropdown-content">
+                    <a th:href="@{/addEvent}">Add</a>
+                    <a th:href="@{/userEvents}">Your Events</a>
+                    <a th:href="@{/viewEvents}">All Events</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+    <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
+</header>
 
+<main class="dashboard">
+    <div class="page-header">
+        <h2>Resolve Events</h2>
+    </div>
+
+    <div class="data-grid-container">
+        <div class="data-grid-header">
+            <h3>Event List</h3>
+            <div class="filter-container">
+                <input type="text" id="eventSearch" placeholder="Search events..." onkeyup="filterTable()">
+                <select id="statusFilter" onchange="filterTable()">
+                    <option value="">All Statuses</option>
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                    <option value="REOPENED">Reopened</option>
+                </select>
+            </div>
+        </div>
+        <div class="data-grid-wrapper">
+            <table class="data-grid">
+                <thead>
+                <tr>
+                    <th>
+                        <a th:href="@{'/resolveEvents?sortBy=id&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">ID</a>
+                    </th>
+                    <th>
+                        <a th:href="@{'/resolveEvents?sortBy=title&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">Title</a>
+                    </th>
+                    <th>
+                        <a th:href="@{'/resolveEvents?sortBy=category&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">Category</a>
+                    </th>
+                    <th>
+                        <a th:href="@{'/resolveEvents?sortBy=status&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">Status</a>
+                    </th>
+                    <th>
+                        <a th:href="@{'/resolveEvents?sortBy=detectionDate&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">Detection Date</a>
+                    </th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="event : ${eventsPage.content}" th:attr="data-event-id=${event.id}">
+                    <td th:text="${event.id}"></td>
+                    <td th:text="${event.title}" th:attr="data-title=${event.title}"></td>
+                    <td th:text="${event.category}" th:attr="data-category=${event.category}"></td>
+                    <td>
+                        <span th:class="${'status-badge ' + event.status.toString().toLowerCase()}"
+                              th:text="${event.status}"
+                              th:attr="data-status=${event.status}"></span>
+                    </td>
+                    <td th:text="${#temporals.format(event.detectionDate, 'yyyy-MM-dd')}"></td>
+                    <td>
+                        <button class="action-button edit" th:onclick="'openResolveModal(' + ${event.id} + ')'">Resolve</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <span th:if="${eventsPage.number > 0}">
+                <a th:href="@{'/resolveEvents?page=0&size=' + ${eventsPage.size}}">First</a>
+                <a th:href="@{'/resolveEvents?page=' + ${eventsPage.number - 1} + '&size=' + ${eventsPage.size}}">Previous</a>
+            </span>
+            <span th:each="i: ${#numbers.sequence(0, eventsPage.totalPages - 1)}">
+                <a th:href="@{'/resolveEvents?page=' + ${i} + '&size=' + ${eventsPage.size}}" th:text="${i + 1}" th:class="${eventsPage.number == i ? 'active' : ''}"></a>
+            </span>
+            <span th:if="${eventsPage.number < eventsPage.totalPages - 1}">
+                <a th:href="@{'/resolveEvents?page=' + ${eventsPage.number + 1} + '&size=' + ${eventsPage.size}}">Next</a>
+                <a th:href="@{'/resolveEvents?page=' + ${eventsPage.totalPages - 1} + '&size=' + ${eventsPage.size}}">Last</a>
+            </span>
+        </div>
+    </div>
+</main>
+
+<div id="resolveModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Resolve Event</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="event-details">
+                <p><strong>Event ID:</strong> <span id="modalEventId"></span></p>
+                <p><strong>Title:</strong> <span id="modalEventTitle"></span></p>
+                <p><strong>Category:</strong> <span id="modalEventCategory"></span></p>
+                <p><strong>Current Status:</strong> <span id="modalEventStatus"></span></p>
+            </div>
+            <form id="resolveForm" method="post">
+                <input type="hidden" id="eventId" name="id">
+                <div class="form-group">
+                    <label for="status">New Status:</label>
+                    <select id="status" name="status" required class="form-control">
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="CLOSED">Closed</option>
+                        <option value="REOPENED">Reopened</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Comment:</label>
+                    <textarea id="comment" name="comment" rows="4" required class="form-control"
+                              placeholder="Please provide details about this status update..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="button secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="submit-button">Update Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    let currentEventData = null;
+
+    function openResolveModal(eventId) {
+        const row = document.querySelector(`tr[data-event-id="${eventId}"]`);
+        currentEventData = {
+            id: eventId,
+            title: row.querySelector('[data-title]').getAttribute('data-title'),
+            category: row.querySelector('[data-category]').getAttribute('data-category'),
+            status: row.querySelector('[data-status]').getAttribute('data-status')
+        };
+
+        // Update modal content
+        document.getElementById('modalEventId').textContent = currentEventData.id;
+        document.getElementById('modalEventTitle').textContent = currentEventData.title;
+        document.getElementById('modalEventCategory').textContent = currentEventData.category;
+        document.getElementById('modalEventStatus').textContent = currentEventData.status;
+
+        // Update form
+        document.getElementById('eventId').value = currentEventData.id;
+        document.getElementById('resolveForm').action = `/resolveEvents/${currentEventData.id}`;
+
+        // Show modal
+        document.getElementById('resolveModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('resolveModal').style.display = 'none';
+        document.getElementById('resolveForm').reset();
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('resolveModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+    // Close modal when clicking (x)
+    document.querySelector('.close').onclick = closeModal;
+
+    function filterTable() {
+        const input = document.getElementById('eventSearch');
+        const filter = input.value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const table = document.querySelector('.data-grid');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            let show = false;
+            const cells = rows[i].getElementsByTagName('td');
+            const status = cells[3].textContent.trim().toUpperCase();
+
+            if ((statusFilter === '' || status === statusFilter) &&
+                (cells[0].textContent.toLowerCase().indexOf(filter) > -1 ||
+                    cells[1].textContent.toLowerCase().indexOf(filter) > -1 ||
+                    cells[2].textContent.toLowerCase().indexOf(filter) > -1)) {
+                show = true;
+            }
+
+            rows[i].style.display = show ? '' : 'none';
+        }
+    }
+</script>
 </body>
 </html>
+

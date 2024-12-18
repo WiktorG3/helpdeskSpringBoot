@@ -1,14 +1,19 @@
 package com.example.helpdesk.controller;
 
 import com.example.helpdesk.dto.UserRegistrationDTO;
+import com.example.helpdesk.model.Comment;
 import com.example.helpdesk.model.Event;
 import com.example.helpdesk.model.User;
 import com.example.helpdesk.repository.EventRepository;
 import com.example.helpdesk.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -60,10 +65,24 @@ public class HelpdeskController {
 
     @GetMapping("/viewEvents")
     public String viewEvents(Model model) {
-        List<Event> events = eventRepository.findAll();
+        List<Event> events = eventRepository.findAllWithComments();
         model.addAttribute("events", events);
         return "viewEvents";
     }
+
+    @GetMapping("/viewComment/{eventId}")
+    @ResponseBody
+    public String viewComment(@PathVariable Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        if (event.getStatus() == Event.EventStatus.RESOLVED && !event.getComments().isEmpty()) {
+            return event.getComments().get(event.getComments().size() - 1).getContent();
+        }
+
+        return "No comment available";
+    }
+
 
     @GetMapping("/userEvents")
     public String userEvents(Model model, Authentication authentication) {
@@ -187,7 +206,7 @@ public class HelpdeskController {
         event.setDetectionDate(date);
         event.setDowntime(downtime);
         event.setUser(currentUser);
-        event.setCompleted(false);
+
 
         eventRepository.save(event);
         model.addAttribute("message", "Event added successfully");
@@ -239,4 +258,53 @@ public class HelpdeskController {
         redirectAttributes.addFlashAttribute("success", "User updated successfully");
         return "redirect:/editUsers";
     }
+
+
+    @GetMapping("/resolveEvents")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String resolveEvents(Model model,
+                                @RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "10") int size,
+                                @RequestParam(defaultValue = "id") String sortBy,
+                                @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+        Page<Event> eventsPage = eventRepository.findAll(pageRequest);
+
+        model.addAttribute("eventsPage", eventsPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", eventsPage.getTotalPages());
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir);
+        return "resolveEvents";
+    }
+
+    @PostMapping("/resolveEvents/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String updateEventStatus(@PathVariable Long id,
+                                    @RequestParam Event.EventStatus status,
+                                    @RequestParam String comment,
+                                    Authentication authentication,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            Event event = eventRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+            event.setStatus(status);
+
+            User admin = userRepository.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found"));
+
+            Comment newComment = new Comment(comment, event, admin);
+            event.addComment(newComment);
+
+            eventRepository.save(event);
+            redirectAttributes.addFlashAttribute("success", "Event status updated successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to update event status: " + e.getMessage());
+        }
+        return "redirect:/resolveEvents";
+    }
+
+
 }
