@@ -45,28 +45,28 @@
       </div>
 
       <div class="stats-container">
-        <div class="stat-card active">
-          <span class="number">6</span>
-          <span class="label">Active</span>
+        <div th:class="'stat-card emergency' + (${emergencyCount > 0} ? ' active' : '')">
+          <span class="number" th:text="${emergencyCount}">0</span>
+          <span class="label">Emergency</span>
         </div>
         <div class="stat-card open">
-          <span class="number">3</span>
+          <span class="number" th:text="${openCount}">0</span>
           <span class="label">Open</span>
         </div>
         <div class="stat-card in-progress">
-          <span class="number">1</span>
+          <span class="number" th:text="${inProgressCount}">0</span>
           <span class="label">In Progress</span>
         </div>
         <div class="stat-card resolved">
-          <span class="number">2</span>
+          <span class="number" th:text="${resolvedCount}">0</span>
           <span class="label">Resolved</span>
         </div>
         <div class="stat-card closed">
-          <span class="number">1</span>
+          <span class="number" th:text="${closedCount}">0</span>
           <span class="label">Closed</span>
         </div>
         <div class="stat-card reopened">
-          <span class="number">0</span>
+          <span class="number" th:text="${reopenedCount}">0</span>
           <span class="label">Reopened</span>
         </div>
       </div>

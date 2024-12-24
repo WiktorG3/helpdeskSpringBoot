@@ -6,13 +6,18 @@ import com.example.helpdesk.model.Event;
 import com.example.helpdesk.model.User;
 import com.example.helpdesk.repository.EventRepository;
 import com.example.helpdesk.repository.UserRepository;
+import com.example.helpdesk.service.PdfGeneratorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +30,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -41,6 +47,8 @@ public class HelpdeskController {
     @Autowired
     private EventRepository eventRepository;
 
+    @Autowired
+    private PdfGeneratorService pdfGeneratorService;
 
     @GetMapping("/register")
     public String register(Model model) {
@@ -54,7 +62,21 @@ public class HelpdeskController {
     }
 
     @GetMapping("/dashboard")
-    public String dashboard() {
+    public String dashboard(Model model) {
+        long emergencyCount = eventRepository.countByEmergencyTrue();
+        long openCount = eventRepository.countByStatus(Event.EventStatus.OPEN);
+        long inProgressCount = eventRepository.countByStatus(Event.EventStatus.IN_PROGRESS);
+        long resolvedCount = eventRepository.countByStatus(Event.EventStatus.RESOLVED);
+        long closedCount = eventRepository.countByStatus(Event.EventStatus.CLOSED);
+        long reopenedCount = eventRepository.countByStatus(Event.EventStatus.REOPENED);
+
+        model.addAttribute("emergencyCount", emergencyCount);
+        model.addAttribute("openCount", openCount);
+        model.addAttribute("inProgressCount", inProgressCount);
+        model.addAttribute("resolvedCount", resolvedCount);
+        model.addAttribute("closedCount", closedCount);
+        model.addAttribute("reopenedCount", reopenedCount);
+
         return "dashboard";
     }
 
@@ -306,5 +328,50 @@ public class HelpdeskController {
         return "redirect:/resolveEvents";
     }
 
+    @GetMapping("/printResults")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String printResults() {
+        return "printResults";
+    }
 
+    @GetMapping("/printUsers")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<InputStreamResource> printUsers() {
+        List<User> users = userRepository.findAll();
+        ByteArrayInputStream bis = pdfGeneratorService.generateUsersPdf(users);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=users.pdf");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(bis));
+    }
+
+    @GetMapping("/printEvents")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<InputStreamResource> printEvents(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+
+        List<Event> events;
+        if (fromDate != null && toDate != null) {
+            events = eventRepository.findByDetectionDateBetween(fromDate, toDate);
+        } else {
+            events = eventRepository.findAll();
+        }
+
+        ByteArrayInputStream bis = pdfGeneratorService.generateEventsPdf(events);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=events.pdf");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(bis));
+    }
 }

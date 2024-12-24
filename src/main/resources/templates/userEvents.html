@@ -48,20 +48,17 @@
 
     <div class="data-grid-container">
         <div class="data-grid-header">
-            <div class="search-box">
-                <input type="text" id="eventSearch" placeholder="Search your events..." onkeyup="filterTable()">
-            </div>
-        </div>
-
-        <div class="data-grid-header">
-            <div class="search-box">
-                <label for="dateFrom">From:</label>
-                <input type="date" id="dateFrom">
-
-                <label for="dateTo">To:</label>
-                <input type="date" id="dateTo">
-
-                <button onclick="filterByDate()">Filter</button>
+            <div class="search-filter-container">
+                <div class="search-box">
+                    <input type="text" id="eventSearch" placeholder="Search your events..." onkeyup="filterTable()">
+                </div>
+                <div class="search-box">
+                    <label for="dateFrom">From:</label>
+                    <input type="date" id="dateFrom">
+                    <label for="dateTo">To:</label>
+                    <input type="date" id="dateTo">
+                    <button onclick="filterByDate()" class="filter-button">Filter</button>
+                </div>
             </div>
         </div>
 
@@ -69,9 +66,9 @@
             <table class="data-grid">
                 <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Category</th>
-                    <th>Title</th>
+                    <th><a href="#" onclick="sortTable(0)">ID</a></th>
+                    <th><a href="#" onclick="sortTable(1)">Category</a></th>
+                    <th><a href="#" onclick="sortTable(2)">Title</a></th>
                     <th>Description</th>
                     <th>Emergency</th>
                     <th>Detection Date</th>
@@ -193,6 +190,33 @@
         } else {
             x.style.display = "block";
         }
+    }
+
+    function sortTable(n) {
+        const table = document.querySelector('.data-grid');
+        const rows = Array.from(table.querySelectorAll('tbody tr'));
+        const headers = table.querySelectorAll('th a');
+        const currentHeader = headers[n];
+        
+        // Toggle sort direction
+        const isAscending = !currentHeader.classList.contains('asc');
+        
+        // Update header classes
+        headers.forEach(header => header.classList.remove('asc', 'desc'));
+        currentHeader.classList.add(isAscending ? 'asc' : 'desc');
+        
+        // Sort rows
+        rows.sort((a, b) => {
+            const aValue = a.cells[n].textContent.trim();
+            const bValue = b.cells[n].textContent.trim();
+            return isAscending ? 
+                aValue.localeCompare(bValue, undefined, {numeric: true}) :
+                bValue.localeCompare(aValue, undefined, {numeric: true});
+        });
+        
+        // Reorder table
+        const tbody = table.querySelector('tbody');
+        rows.forEach(row => tbody.appendChild(row));
     }
 </script>
 

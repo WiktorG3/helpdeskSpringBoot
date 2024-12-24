@@ -1,10 +1,133 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Results - Helpdesk Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+<header class="navbar">
+    <div class="navbar-brand">
+        <h1><a th:href="@{/dashboard}">Helpdesk Dashboard</a></h1>
+    </div>
+    <nav class="navbar-menu">
+        <ul>
+            <li class="dropdown" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+                <a href="#" class="dropbutton">Admin</a>
+                <div class="dropdown-content">
+                    <a th:href="@{/resolveEvents}">Resolve Events</a>
+                    <a th:href="@{/editUsers}">Edit Users</a>
+                    <a th:href="@{/printResults}">Print Results</a>
+                </div>
+            </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
+            <li><a th:href="@{/viewUsers}">Users</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbutton">Events</a>
+                <div class="dropdown-content">
+                    <a th:href="@{/addEvent}">Add</a>
+                    <a th:href="@{/userEvents}">Your Events</a>
+                    <a th:href="@{/viewEvents}">All Events</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+    <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
+</header>
 
+<main class="dashboard">
+    <div class="page-header">
+        <h2>Print Results</h2>
+        <p>Generate PDF reports for users and events</p>
+    </div>
+
+    <div class="card-container">
+        <!-- Users Card -->
+        <div class="card">
+            <h3>Print Users Report</h3>
+            <p>Generate a PDF report containing all registered users and their roles.</p>
+            <a href="/printUsers" target="_blank" class="card-button">Print Users</a>
+        </div>
+
+        <!-- Events Card -->
+        <div class="card">
+            <h3>Print Events Report</h3>
+            <p>Generate a PDF report of events. You can filter by date range.</p>
+            <div class="form-container" style="padding: 0; box-shadow: none;">
+                <form id="eventsFilterForm" class="event-form">
+                    <div class="form-group">
+                        <label for="fromDate">From Date:</label>
+                        <input type="date" id="fromDate" name="fromDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="toDate">To Date:</label>
+                        <input type="date" id="toDate" name="toDate">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="submit-button">Print Events</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const fromDateInput = document.getElementById('fromDate');
+        const toDateInput = document.getElementById('toDate');
+        const form = document.getElementById('eventsFilterForm');
+
+        // Set min/max dates
+        const minDate = "2020-01-01";
+        const today = new Date().toISOString().split('T')[0];
+
+        fromDateInput.min = minDate;
+        fromDateInput.max = today;
+        toDateInput.min = minDate;
+        toDateInput.max = today;
+
+        // Set default values
+        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+            .toISOString().split('T')[0];
+        fromDateInput.value = firstDayOfMonth;
+        toDateInput.value = today;
+
+        // Handle date changes
+        fromDateInput.addEventListener('change', function() {
+            if (fromDateInput.value > toDateInput.value) {
+                toDateInput.value = fromDateInput.value;
+            }
+        });
+
+        toDateInput.addEventListener('change', function() {
+            if (toDateInput.value < fromDateInput.value) {
+                fromDateInput.value = toDateInput.value;
+            }
+        });
+
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fromDate = fromDateInput.value;
+            const toDate = toDateInput.value;
+            window.open(`/printEvents?fromDate=${fromDate}&toDate=${toDate}`, '_blank');
+        });
+    });
+
+    function toggleNavbar() {
+        let x = document.querySelector(".navbar-menu");
+        if (x.style.display === "block") {
+            x.style.display = "none";
+        } else {
+            x.style.display = "block";
+        }
+    }
+</script>
 </body>
 </html>
+

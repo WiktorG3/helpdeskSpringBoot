@@ -47,16 +47,20 @@
     <div class="data-grid-container">
         <div class="data-grid-header">
             <h3>Event List</h3>
-            <div class="filter-container">
-                <input type="text" id="eventSearch" placeholder="Search events..." onkeyup="filterTable()">
-                <select id="statusFilter" onchange="filterTable()">
-                    <option value="">All Statuses</option>
-                    <option value="OPEN">Open</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="RESOLVED">Resolved</option>
-                    <option value="CLOSED">Closed</option>
-                    <option value="REOPENED">Reopened</option>
-                </select>
+            <div class="search-filter-container">
+                <div class="search-box">
+                    <input type="text" id="eventSearch" placeholder="Search events..." onkeyup="filterTable()">
+                </div>
+                <div class="filter-container">
+                    <select id="statusFilter" onchange="filterTable()">
+                        <option value="">All Statuses</option>
+                        <option value="OPEN">Open</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="CLOSED">Closed</option>
+                        <option value="REOPENED">Reopened</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div class="data-grid-wrapper">
@@ -64,19 +68,24 @@
                 <thead>
                 <tr>
                     <th>
-                        <a th:href="@{'/resolveEvents?sortBy=id&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">ID</a>
+                        <a th:href="@{'/resolveEvents?sortBy=id&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
+                           th:class="${sortBy == 'id' ? sortDir : ''}">ID</a>
                     </th>
                     <th>
-                        <a th:href="@{'/resolveEvents?sortBy=title&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">Title</a>
+                        <a th:href="@{'/resolveEvents?sortBy=title&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
+                           th:class="${sortBy == 'title' ? sortDir : ''}">Title</a>
                     </th>
                     <th>
-                        <a th:href="@{'/resolveEvents?sortBy=category&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">Category</a>
+                        <a th:href="@{'/resolveEvents?sortBy=category&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
+                           th:class="${sortBy == 'category' ? sortDir : ''}">Category</a>
                     </th>
                     <th>
-                        <a th:href="@{'/resolveEvents?sortBy=status&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">Status</a>
+                        <a th:href="@{'/resolveEvents?sortBy=status&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
+                           th:class="${sortBy == 'status' ? sortDir : ''}">Status</a>
                     </th>
                     <th>
-                        <a th:href="@{'/resolveEvents?sortBy=detectionDate&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}">Detection Date</a>
+                        <a th:href="@{'/resolveEvents?sortBy=detectionDate&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
+                           th:class="${sortBy == 'detectionDate' ? sortDir : ''}">Detection Date</a>
                     </th>
                     <th>Action</th>
                 </tr>
