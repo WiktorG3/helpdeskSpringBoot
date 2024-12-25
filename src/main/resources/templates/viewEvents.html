@@ -23,9 +23,6 @@
                     <a th:href="@{/printResults}">Print Results</a>
                 </div>
             </li>
-            <li><a th:href="@{/register}">Register</a></li>
-            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
-            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
             <li><a th:href="@{/viewUsers}">Users</a></li>
             <li class="dropdown">
                 <a href="#" class="dropbutton">Events</a>
@@ -35,6 +32,9 @@
                     <a th:href="@{/viewEvents}">All Events</a>
                 </div>
             </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
         </ul>
     </nav>
     <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
@@ -48,8 +48,10 @@
 
     <div class="data-grid-container">
         <div class="data-grid-header">
-            <div class="search-box">
-                <input type="text" id="eventSearch" placeholder="Search events..." onkeyup="filterTable()">
+            <div class="search-filter-container">
+                <div class="search-box">
+                    <input type="text" id="eventSearch" placeholder="Search events..." onkeyup="filterTable()">
+                </div>
             </div>
         </div>
 
@@ -57,10 +59,8 @@
             <div class="search-box">
                 <label for="dateFrom">From:</label>
                 <input type="date" id="dateFrom">
-
                 <label for="dateTo">To:</label>
                 <input type="date" id="dateTo">
-
                 <button onclick="filterByDate()" class="filter-button">Filter</button>
             </div>
         </div>
@@ -69,20 +69,20 @@
             <table class="data-grid">
                 <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Category</th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Emergency</th>
-                    <th>Detection Date</th>
-                    <th>Downtime</th>
-                    <th>User</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th><a href="#" onclick="sortTable(0)">ID</a></th>
+                    <th><a href="#" onclick="sortTable(1)">Category</a></th>
+                    <th><a href="#" onclick="sortTable(2)">Title</a></th>
+                    <th><a href="#" onclick="sortTable(3)">Description</a></th>
+                    <th><a href="#" onclick="sortTable(4)">Emergency</a></th>
+                    <th><a href="#" onclick="sortTable(5)">Detection Date</a></th>
+                    <th><a href="#" onclick="sortTable(6)">Downtime</a></th>
+                    <th><a href="#" onclick="sortTable(7)">User</a></th>
+                    <th><a href="#" onclick="sortTable(8)">Status</a></th>
+                    <th>Comment</th>
                 </tr>
                 </thead>
                 <tbody id="eventTableBody">
-                <tr th:each="event : ${events}">
+                <tr th:each="event : ${eventsPage.content}">
                     <td th:text="${event.id}"></td>
                     <td th:text="${event.category}"></td>
                     <td th:text="${event.title}"></td>
@@ -102,25 +102,49 @@
                         <button th:if="${event.status.name() == 'RESOLVED'}"
                                 class="action-button view-comment"
                                 th:data-event-id="${event.id}">
-                            View Comment
+                            View
                         </button>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
+
+        <div class="pagination" th:if="${eventsPage.totalPages > 0}">
+            <span th:if="${eventsPage.number > 0}">
+                <a th:href="@{'/viewEvents?page=0&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">First</a>
+                <a th:href="@{'/viewEvents?page=' + ${eventsPage.number - 1} + '&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Previous</a>
+            </span>
+            <span th:each="i: ${#numbers.sequence(0, eventsPage.totalPages - 1)}">
+                <a th:href="@{'/viewEvents?page=' + ${i} + '&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}"
+                   th:text="${i + 1}"
+                   th:class="${currentPage == i ? 'active' : ''}"></a>
+            </span>
+            <span th:if="${eventsPage.number < eventsPage.totalPages - 1}">
+                <a th:href="@{'/viewEvents?page=' + ${eventsPage.number + 1} + '&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Next</a>
+                <a th:href="@{'/viewEvents?page=' + ${eventsPage.totalPages - 1} + '&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Last</a>
+            </span>
+        </div>
     </div>
 </main>
 
 <div id="commentModal" class="modal">
     <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Comment</h2>
-        <p id="commentContent"></p>
+        <div class="modal-header">
+            <h2>Comment</h2>
+            <span class="close" onclick="closeCommentModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="commentContent"></p>
+        </div>
     </div>
 </div>
 
 <script th:inline="javascript">
+    function closeCommentModal() {
+        document.getElementById('commentModal').style.display = 'none';
+    }
+
     function filterTable() {
         const input = document.getElementById('eventSearch');
         const filter = input.value.toLowerCase();
@@ -220,6 +244,43 @@
             x.style.display = "none";
         } else {
             x.style.display = "block";
+        }
+    }
+
+    function sortTable(n) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.querySelector(".data-grid");
+        switching = true;
+        dir = "asc";
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (dir == "asc") {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount ++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
         }
     }
 </script>

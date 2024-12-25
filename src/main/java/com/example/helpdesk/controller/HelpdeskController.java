@@ -55,6 +55,36 @@ public class HelpdeskController {
         model.addAttribute("userDto", new UserRegistrationDTO());
         return "register";
     }
+    @PostMapping("/register")
+    public String register(@Valid @ModelAttribute("userDto") UserRegistrationDTO userDto,
+                           BindingResult result,
+                           Model model) {
+        if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
+            result.rejectValue("confirmPassword", "error.userDto", "Passwords do not match");
+        }
+
+        if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
+            result.rejectValue("username", "error.userDto", "Username already exists");
+        }
+        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+            result.rejectValue("email", "error.userDto", "Email already exists");
+        }
+        if (result.hasErrors()) {
+            return "register";
+        }
+
+        User user = new User();
+        user.setEmail(userDto.getEmail());
+        user.setUsername(userDto.getUsername());
+        user.setName(userDto.getName());
+        user.setSurname(userDto.getSurname());
+        user.setRole("ROLE_USER");
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        userRepository.save(user);
+
+        model.addAttribute("message", "User registered successfully");
+        return "redirect:/login";
+    }
 
     @GetMapping("/login")
     public String login() {
@@ -86,9 +116,20 @@ public class HelpdeskController {
     }
 
     @GetMapping("/viewEvents")
-    public String viewEvents(Model model) {
-        List<Event> events = eventRepository.findAllWithComments();
-        model.addAttribute("events", events);
+    public String viewEvents(Model model,
+                              @RequestParam(defaultValue = "0") int page,
+                              @RequestParam(defaultValue = "10") int size,
+                              @RequestParam(defaultValue = "id") String sortBy,
+                              @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+        Page<Event> eventsPage = eventRepository.findAll(pageRequest);
+
+        model.addAttribute("eventsPage", eventsPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", eventsPage.getTotalPages());
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir);
         return "viewEvents";
     }
 
@@ -107,16 +148,81 @@ public class HelpdeskController {
 
 
     @GetMapping("/userEvents")
-    public String userEvents(Model model, Authentication authentication) {
+    public String userEvents(Model model,
+                             Authentication authentication,
+                             @RequestParam(defaultValue = "0") int page,
+                             @RequestParam(defaultValue = "10") int size,
+                             @RequestParam(defaultValue = "id") String sortBy,
+                             @RequestParam(defaultValue = "asc") String sortDir) {
+
         if (authentication != null && authentication.isAuthenticated()) {
             String username = authentication.getName();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-            List<Event> userEvents = eventRepository.findByUser(user);
-            model.addAttribute("events", userEvents);
+            Sort sort = Sort.by(sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
+            PageRequest pageRequest = PageRequest.of(page, size, sort);
+
+            Page<Event> eventsPage = eventRepository.findByUser(user, pageRequest);
+
+            model.addAttribute("eventsPage", eventsPage);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", eventsPage.getTotalPages());
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDir", sortDir);
         }
+
         return "userEvents";
+    }
+
+    @PostMapping("/userEvents/{id}")
+    public String updateUserEvent(@PathVariable("id") Long id,
+                                  @ModelAttribute Event updatedEvent,
+                                  @RequestParam("detectionDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate detectionDate,
+                                  Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        if (event.getUser().getId().equals(user.getId()) || user.getRole().equalsIgnoreCase("admin")) {
+            event.setDescription(updatedEvent.getDescription());
+            event.setEmergency(updatedEvent.isEmergency());
+            event.setDetectionDate(detectionDate);
+            event.setDowntime(updatedEvent.getDowntime());
+
+            eventRepository.save(event);
+            return "redirect:/userEvents";
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to edit this event");
+        }
+    }
+
+    @DeleteMapping("/userEvents/{id}")
+    public ResponseEntity<String> deleteUserEvent(@PathVariable("id") Long id, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        if (event.getUser().getId().equals(user.getId()) || user.getRole().equalsIgnoreCase("admin")) {
+            eventRepository.delete(event);
+            return ResponseEntity.ok("Event deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have permission to delete this event");
+        }
     }
 
     @GetMapping("/editEvent/{id}")
@@ -166,41 +272,21 @@ public class HelpdeskController {
     }
 
     @GetMapping("/viewUsers")
-    public String users(Model model) {
-        List<User> users = userRepository.findAll();
-        model.addAttribute("users", users);
+    public String viewUsers(Model model,
+                             @RequestParam(defaultValue = "0") int page,
+                             @RequestParam(defaultValue = "10") int size,
+                             @RequestParam(defaultValue = "id") String sortBy,
+                             @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+        Page<User> usersPage = userRepository.findAll(pageRequest);
+
+        model.addAttribute("eventsPage", usersPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", usersPage.getTotalPages());
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir);
         return "viewUsers";
-    }
-
-    @PostMapping("/register")
-    public String register(@Valid @ModelAttribute("userDto") UserRegistrationDTO userDto,
-                           BindingResult result,
-                           Model model) {
-        if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
-            result.rejectValue("confirmPassword", "error.userDto", "Passwords do not match");
-        }
-
-        if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
-            result.rejectValue("username", "error.userDto", "Username already exists");
-        }
-        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            result.rejectValue("email", "error.userDto", "Email already exists");
-        }
-        if (result.hasErrors()) {
-            return "register";
-        }
-
-        User user = new User();
-        user.setEmail(userDto.getEmail());
-        user.setUsername(userDto.getUsername());
-        user.setName(userDto.getName());
-        user.setSurname(userDto.getSurname());
-        user.setRole("user");
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        userRepository.save(user);
-
-        model.addAttribute("message", "User registered successfully");
-        return "redirect:/login";
     }
 
     @PostMapping("/addEvent")
@@ -236,22 +322,27 @@ public class HelpdeskController {
     }
 
     @GetMapping("/editUsers")
-    public String editUsers(Model model) {
-        List<User> users = userRepository.findAll();
-        model.addAttribute("users", users);
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String editUsers(Model model,
+                           @RequestParam(defaultValue = "0") int page,
+                           @RequestParam(defaultValue = "10") int size,
+                           @RequestParam(defaultValue = "username") String sortBy,
+                           @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+        Page<User> usersPage = userRepository.findAll(pageRequest);
+
+        model.addAttribute("usersPage", usersPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", usersPage.getTotalPages());
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir);
         return "editUsers";
     }
 
-    @GetMapping("/editUsers/{username}")
-    public String editUser(@PathVariable String username, Model model) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        model.addAttribute("user", user);
-        return "editUser";
-    }
-
     @PostMapping("/editUsers")
-    public String updateUser(@RequestParam String originalUsername,
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String updateUser(@RequestParam Long id,
                              @RequestParam String username,
                              @RequestParam String name,
                              @RequestParam String surname,
@@ -259,25 +350,29 @@ public class HelpdeskController {
                              @RequestParam String role,
                              @RequestParam(required = false) String newPassword,
                              RedirectAttributes redirectAttributes) {
-        User user = userRepository.findByUsername(originalUsername)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        try {
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        user.setUsername(username);
-        user.setName(name);
-        user.setSurname(surname);
-        user.setEmail(email);
-        user.setRole(role);
+            user.setUsername(username);
+            user.setName(name);
+            user.setSurname(surname);
+            user.setEmail(email);
+            user.setRole(role);
 
-        if (newPassword != null && !newPassword.isEmpty()) {
-            if (newPassword.length() < 6) {
-                redirectAttributes.addFlashAttribute("error", "New password must be at least 6 characters long");
-                return "redirect:/editUsers/" + originalUsername;
+            if (newPassword != null && !newPassword.isEmpty()) {
+                if (newPassword.length() < 6) {
+                    redirectAttributes.addFlashAttribute("error", "New password must be at least 6 characters long");
+                    return "redirect:/editUsers";
+                }
+                user.setPassword(passwordEncoder.encode(newPassword));
             }
-            user.setPassword(passwordEncoder.encode(newPassword));
-        }
 
-        userRepository.save(user);
-        redirectAttributes.addFlashAttribute("success", "User updated successfully");
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("success", "User updated successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to update user: " + e.getMessage());
+        }
         return "redirect:/editUsers";
     }
 
@@ -336,8 +431,13 @@ public class HelpdeskController {
 
     @GetMapping("/printUsers")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<InputStreamResource> printUsers() {
-        List<User> users = userRepository.findAll();
+    public ResponseEntity<InputStreamResource> printUsers(@RequestParam(required = false) String role) {
+        List<User> users;
+        if (role != null && !role.equals("everyone")) {
+            users = userRepository.findByRole(role);
+        } else {
+            users = userRepository.findAll();
+        }
         ByteArrayInputStream bis = pdfGeneratorService.generateUsersPdf(users);
 
         HttpHeaders headers = new HttpHeaders();

@@ -51,7 +51,6 @@ body {
 .navbar-menu ul {
     display: flex;
     list-style: none;
-    gap: 1rem;
     margin: 0;
     padding: 0;
 }
@@ -108,17 +107,21 @@ body {
 
 /* Dashboard Styles */
 .dashboard {
-    padding: 2rem;
+    flex: 1;
+    padding: 1rem;
     max-width: 1200px;
     margin: 0 auto;
+    box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .welcome-section {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .welcome-section h2 {
+    color: var(--primary-color);
     font-size: 2rem;
     margin-bottom: 0.5rem;
 }
@@ -132,12 +135,12 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .stat-card {
     background: var(--card-background);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     text-align: center;
@@ -156,28 +159,54 @@ body {
     font-size: 0.875rem;
 }
 
-.stat-card.active { border-left: 4px solid var(--active-color); }
-.stat-card.open { border-left: 4px solid var(--open-color); }
-.stat-card.in-progress { border-left: 4px solid var(--in-progress-color); }
-.stat-card.resolved { border-left: 4px solid var(--resolved-color); }
-.stat-card.closed { border-left: 4px solid var(--closed-color); }
-.stat-card.reopened { border-left: 4px solid var(--reopened-color); }
+.stat-card.emergency-active {
+    background-color: #f44336;
+    border-left: 4px solid #d32f2f;
+    color: white;
+}
+.stat-card.emergency-active .label,
+.stat-card.emergency-active .number {
+    color: white;
+}
+
+.stat-card.emergency {
+    background-color: var(--card-background);
+    border-left: 4px solid #d32f2f;
+}
+
+.stat-card.open {
+    border-left: 4px solid var(--open-color);
+}
+.stat-card.in-progress {
+    border-left: 4px solid var(--in-progress-color);
+}
+.stat-card.resolved {
+    border-left: 4px solid var(--resolved-color);
+}
+.stat-card.closed {
+    border-left: 4px solid var(--closed-color);
+}
+.stat-card.reopened {
+    border-left: 4px solid var(--reopened-color);
+}
 
 /* Action Cards */
 .card-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .card {
     background: var(--card-background);
-    padding: 2rem;
+    padding: 1rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     transition: transform 0.3s, box-shadow 0.3s;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .card:hover {
@@ -188,12 +217,13 @@ body {
 .card h3 {
     margin-bottom: 1rem;
     color: var(--primary-color);
+    font-size: 1.5rem;
 }
 
 .card p {
     color: var(--text-secondary);
-    margin-bottom: 1.5rem;
-    flex-grow: 1;
+    margin-bottom: 1rem;
+    max-width: 80%;
 }
 
 .card-button {
@@ -205,7 +235,6 @@ body {
     border-radius: 4px;
     transition: background-color 0.3s;
     text-align: center;
-    align-self: flex-start;
 }
 
 .card-button:hover {
@@ -217,19 +246,20 @@ body {
     background-color: var(--card-background);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    padding: 2rem;
+    padding: 1rem;
     max-width: 600px;
     margin: 0 auto;
 }
 
 .event-form {
     display: grid;
-    gap: 1.5rem;
 }
 
+/* Consolidated .form-group rules */
 .form-group {
     display: flex;
     flex-direction: column;
+    margin: 0.5rem 0;
 }
 
 .form-group label {
@@ -312,7 +342,7 @@ body {
 
 .page-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .page-header h2 {
@@ -326,7 +356,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: 1rem;
     background-color: var(--background-color);
 }
 
@@ -334,14 +364,14 @@ body {
     background: var(--card-background);
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
+    padding: 1rem;
     width: 100%;
     max-width: 400px;
 }
 
 .auth-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .auth-header h1 {
@@ -359,14 +389,11 @@ body {
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
 }
 
 .auth-form .form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-
 }
 
 .auth-form label {
@@ -447,7 +474,6 @@ body {
 
     .navbar-menu ul {
         flex-direction: column;
-        gap: 0.5rem;
     }
 
     .navbar-menu li {
@@ -483,10 +509,6 @@ body {
     .form-container {
         padding: 1.5rem;
     }
-
-    .event-form {
-        gap: 1rem;
-    }
 }
 
 @media (max-width: 480px) {
@@ -512,7 +534,7 @@ body {
     background: var(--card-background);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    margin-top: 2rem;
+    margin-top: 1rem;
 }
 
 .data-grid-header {
@@ -573,14 +595,40 @@ body {
     font-weight: 500;
 }
 
-.status-badge.active {
-    background-color: #dcfce7;
-    color: #166534;
+/* Additional status color classes */
+.status-badge.open {
+    background-color: #f44336;
+    color: #ffffff;
 }
 
-.status-badge.inactive {
-    background-color: #fee2e2;
-    color: #991b1b;
+.status-badge.in_progress {
+    background-color: #ff9800;
+    color: #ffffff;
+}
+
+.status-badge.resolved {
+    background-color: #00bcd4;
+    color: #ffffff;
+}
+
+.status-badge.closed {
+    background-color: #4caf50;
+    color: #ffffff;
+}
+
+.status-badge.reopened {
+    background-color: #9e9e9e;
+    color: #ffffff;
+}
+
+.status-badge.emergency {
+    background-color: #f44336;
+    color: #ffffff;
+}
+
+.status-badge.non-emergency {
+    background-color: #9e9e9e;
+    color: #ffffff;
 }
 
 .actions {
@@ -632,35 +680,278 @@ body {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.modal[style*="display: block"] {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
+    background-color: #ffffff;
+    width: 95%;
     max-width: 500px;
     border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    padding: 0;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    position: relative;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
+    position: absolute;
+    right: 1.5rem;
+    top: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 0;
+    line-height: 1;
 }
 
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
+.close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.event-details {
+    margin-bottom: 1.5rem;
+}
+
+.event-details p {
+    margin: 0.5rem 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.event-details strong {
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+/* Merged .form-group rules shown earlier */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.form-control {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.filter-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
     cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+}
+
+.filter-button:hover {
+    background-color: var(--primary-light);
+}
+
+.button.secondary {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background-color: white;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.button.secondary:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.submit-button {
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.submit-button:hover {
+    background-color: var(--primary-light);
+}
+
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+    }
+
+    .form-actions button {
+        width: 100%;
+    }
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.pagination a {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    color: var(--text-primary);
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+    background-color: var(--primary-light);
+    color: white;
+    border-color: var(--primary-light);
+}
+
+.pagination a.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Status Droplist Styles */
+.filter-box select {
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    background-color: white;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.filter-box select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(107, 94, 205, 0.1);
+}
+
+/* Column Header Hover Effects */
+.data-grid th a {
+    color: var(--text-primary);
+    text-decoration: none;
+    position: relative;
+}
+
+.data-grid th a:hover {
+    color: var(--primary-color);
+}
+
+.data-grid th a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: var(--primary-color);
+    visibility: hidden;
+    transform: scaleX(0);
+    transition: all 0.3s ease-in-out;
+}
+
+.data-grid th a:hover::after {
+    visibility: visible;
+    transform: scaleX(1);
+}
+
+/* Additional status color classes */
+.status-badge.open {
+    background-color: #f44336;
+    color: #ffffff;
+}
+
+.status-badge.in_progress {
+    background-color: #ff9800;
+    color: #ffffff;
+}
+
+.status-badge.resolved {
+    background-color: #00bcd4;
+    color: #ffffff;
+}
+
+.status-badge.closed {
+    background-color: #4caf50;
+    color: #ffffff;
+}
+
+.status-badge.reopened {
+    background-color: #9e9e9e;
+    color: #ffffff;
+}
+
+.status-badge.emergency {
+    background-color: #f44336;
+    color: #ffffff;
+}
+
+.status-badge.non-emergency {
+    background-color: #9e9e9e;
+    color: #ffffff;
 }

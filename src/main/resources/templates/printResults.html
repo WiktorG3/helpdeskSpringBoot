@@ -22,9 +22,6 @@
                     <a th:href="@{/printResults}">Print Results</a>
                 </div>
             </li>
-            <li><a th:href="@{/register}">Register</a></li>
-            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
-            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
             <li><a th:href="@{/viewUsers}">Users</a></li>
             <li class="dropdown">
                 <a href="#" class="dropbutton">Events</a>
@@ -34,6 +31,9 @@
                     <a th:href="@{/viewEvents}">All Events</a>
                 </div>
             </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
         </ul>
     </nav>
     <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
@@ -50,28 +50,34 @@
         <div class="card">
             <h3>Print Users Report</h3>
             <p>Generate a PDF report containing all registered users and their roles.</p>
-            <a href="/printUsers" target="_blank" class="card-button">Print Users</a>
+            <form id="usersFilterForm" class="event-form">
+                <div class="form-group">
+                    <label for="roleFilter">Filter by Role:</label>
+                    <select id="roleFilter" name="role" class="form-control">
+                        <option value="everyone">Everyone</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                    </select>
+                </div>
+                <button type="submit" onclick="printUsers()" class="submit-button">Print Users</button>
+            </form>
         </div>
 
         <!-- Events Card -->
         <div class="card">
             <h3>Print Events Report</h3>
             <p>Generate a PDF report of events. You can filter by date range.</p>
-            <div class="form-container" style="padding: 0; box-shadow: none;">
-                <form id="eventsFilterForm" class="event-form">
-                    <div class="form-group">
-                        <label for="fromDate">From Date:</label>
-                        <input type="date" id="fromDate" name="fromDate">
-                    </div>
-                    <div class="form-group">
-                        <label for="toDate">To Date:</label>
-                        <input type="date" id="toDate" name="toDate">
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="submit-button">Print Events</button>
-                    </div>
-                </form>
-            </div>
+            <form id="eventsFilterForm" class="event-form">
+                <div class="form-group">
+                    <label for="fromDate">From Date:</label>
+                    <input type="date" id="fromDate" name="fromDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="toDate">To Date:</label>
+                    <input type="date" id="toDate" name="toDate" class="form-control">
+                </div>
+                <button type="submit" class="submit-button">Print Events</button>
+            </form>
         </div>
     </div>
 </main>
@@ -118,6 +124,11 @@
             window.open(`/printEvents?fromDate=${fromDate}&toDate=${toDate}`, '_blank');
         });
     });
+
+    function printUsers() {
+        const roleFilter = document.getElementById('roleFilter').value;
+        window.open(`/printUsers?role=${roleFilter}`, '_blank');
+    }
 
     function toggleNavbar() {
         let x = document.querySelector(".navbar-menu");

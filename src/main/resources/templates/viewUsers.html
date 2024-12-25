@@ -23,9 +23,6 @@
                     <a th:href="@{/printResults}">Print Results</a>
                 </div>
             </li>
-            <li><a th:href="@{/register}">Register</a></li>
-            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
-            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
             <li><a th:href="@{/viewUsers}">Users</a></li>
             <li class="dropdown">
                 <a href="#" class="dropbutton">Events</a>
@@ -35,6 +32,9 @@
                     <a th:href="@{/viewEvents}">All Events</a>
                 </div>
             </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
         </ul>
     </nav>
     <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
@@ -43,7 +43,7 @@
 <main class="dashboard">
     <div class="page-header">
         <h2>User Management</h2>
-        <p>View and manage registered users</p>
+        <p>View and search registered users</p>
     </div>
 
     <div class="data-grid-container">
@@ -57,15 +57,15 @@
             <table class="data-grid">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Name</th>
-                        <th>Surname</th>
-                        <th>Role</th>
+                        <th><a href="#" onclick="sortTable(0)">ID</a></th>
+                        <th><a href="#" onclick="sortTable(1)">Username</a></th>
+                        <th><a href="#" onclick="sortTable(2)">Name</a></th>
+                        <th><a href="#" onclick="sortTable(3)">Surname</a></th>
+                        <th><a href="#" onclick="sortTable(4)">Role</a></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="user : ${users}">
+                    <tr th:each="user : ${eventsPage.content}">
                         <td th:text="${user.id}"></td>
                         <td th:text="${user.username}"></td>
                         <td th:text="${user.name}"></td>
@@ -74,6 +74,22 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <div class="pagination" th:if="${eventsPage.totalPages > 0}">
+            <span th:if="${eventsPage.number > 0}">
+                <a th:href="@{'/viewUsers?page=0&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">First</a>
+                <a th:href="@{'/viewUsers?page=' + ${eventsPage.number - 1} + '&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Previous</a>
+            </span>
+            <span th:each="i: ${#numbers.sequence(0, eventsPage.totalPages - 1)}">
+                <a th:href="@{'/viewUsers?page=' + ${i} + '&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}"
+                   th:text="${i + 1}"
+                   th:class="${currentPage == i ? 'active' : ''}"></a>
+            </span>
+            <span th:if="${eventsPage.number < eventsPage.totalPages - 1}">
+                <a th:href="@{'/viewUsers?page=' + ${eventsPage.number + 1} + '&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Next</a>
+                <a th:href="@{'/viewUsers?page=' + ${eventsPage.totalPages - 1} + '&size=' + ${eventsPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Last</a>
+            </span>
         </div>
     </div>
 </main>
@@ -124,6 +140,42 @@
         }
     }
 
+    function sortTable(n) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.querySelector(".data-grid");
+        switching = true;
+        dir = "asc";
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (dir == "asc") {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount ++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
 </script>
 </body>
 </html>

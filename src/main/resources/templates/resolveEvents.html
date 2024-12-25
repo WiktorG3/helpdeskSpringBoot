@@ -15,25 +15,25 @@
     <nav class="navbar-menu">
         <ul>
             <li class="dropdown" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
-                <a href="#" class="dropbtn">Admin</a>
+                <a href="#" class="dropbutton">Admin</a>
                 <div class="dropdown-content">
                     <a th:href="@{/resolveEvents}">Resolve Events</a>
                     <a th:href="@{/editUsers}">Edit Users</a>
                     <a th:href="@{/printResults}">Print Results</a>
                 </div>
             </li>
-            <li><a th:href="@{/register}">Register</a></li>
-            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
-            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
             <li><a th:href="@{/viewUsers}">Users</a></li>
             <li class="dropdown">
-                <a href="#" class="dropbtn">Events</a>
+                <a href="#" class="dropbutton">Events</a>
                 <div class="dropdown-content">
                     <a th:href="@{/addEvent}">Add</a>
                     <a th:href="@{/userEvents}">Your Events</a>
                     <a th:href="@{/viewEvents}">All Events</a>
                 </div>
             </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
         </ul>
     </nav>
     <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
@@ -41,52 +41,39 @@
 
 <main class="dashboard">
     <div class="page-header">
-        <h2>Resolve Events</h2>
+        <h2>Resolve Tickets</h2>
+        <p>Manage and update tickets statuses</p>
     </div>
 
     <div class="data-grid-container">
         <div class="data-grid-header">
-            <h3>Event List</h3>
-            <div class="search-filter-container">
-                <div class="search-box">
-                    <input type="text" id="eventSearch" placeholder="Search events..." onkeyup="filterTable()">
-                </div>
-                <div class="filter-container">
-                    <select id="statusFilter" onchange="filterTable()">
-                        <option value="">All Statuses</option>
-                        <option value="OPEN">Open</option>
-                        <option value="IN_PROGRESS">In Progress</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="CLOSED">Closed</option>
-                        <option value="REOPENED">Reopened</option>
-                    </select>
-                </div>
+            <div class="search-box">
+                <input type="text" id="eventSearch" placeholder="Search events..." onkeyup="filterTable()">
             </div>
         </div>
+
+        <div class="data-grid-header">
+            <div class="filter-box">
+                <select id="statusFilter" onchange="filterTable()">
+                    <option value="">All Statuses</option>
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                    <option value="REOPENED">Reopened</option>
+                </select>
+            </div>
+        </div>
+
         <div class="data-grid-wrapper">
             <table class="data-grid">
                 <thead>
                 <tr>
-                    <th>
-                        <a th:href="@{'/resolveEvents?sortBy=id&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
-                           th:class="${sortBy == 'id' ? sortDir : ''}">ID</a>
-                    </th>
-                    <th>
-                        <a th:href="@{'/resolveEvents?sortBy=title&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
-                           th:class="${sortBy == 'title' ? sortDir : ''}">Title</a>
-                    </th>
-                    <th>
-                        <a th:href="@{'/resolveEvents?sortBy=category&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
-                           th:class="${sortBy == 'category' ? sortDir : ''}">Category</a>
-                    </th>
-                    <th>
-                        <a th:href="@{'/resolveEvents?sortBy=status&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
-                           th:class="${sortBy == 'status' ? sortDir : ''}">Status</a>
-                    </th>
-                    <th>
-                        <a th:href="@{'/resolveEvents?sortBy=detectionDate&sortDir=' + ${sortDir == 'asc' ? 'desc' : 'asc'}}"
-                           th:class="${sortBy == 'detectionDate' ? sortDir : ''}">Detection Date</a>
-                    </th>
+                    <th><a href="#" onclick="sortTable(0)">ID</a></th>
+                    <th><a href="#" onclick="sortTable(1)">Title</a></th>
+                    <th><a href="#" onclick="sortTable(2)">Category</a></th>
+                    <th><a href="#" onclick="sortTable(3)">Status</a></th>
+                    <th><a href="#" onclick="sortTable(4)">Detection Date</a></th>
                     <th>Action</th>
                 </tr>
                 </thead>
@@ -167,6 +154,10 @@
 
     function openResolveModal(eventId) {
         const row = document.querySelector(`tr[data-event-id="${eventId}"]`);
+        if (!row) {
+            console.error('Row not found for event ID:', eventId);
+            return;
+        }
         currentEventData = {
             id: eventId,
             title: row.querySelector('[data-title]').getAttribute('data-title'),
@@ -226,6 +217,63 @@
             rows[i].style.display = show ? '' : 'none';
         }
     }
+
+    function sortTable(n) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.querySelector(".data-grid");
+        switching = true;
+        dir = "asc";
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (dir == "asc") {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount ++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
+
+    function toggleNavbar() {
+        let x = document.querySelector(".navbar-menu");
+        if (x.style.display === "block") {
+            x.style.display = "none";
+        } else {
+            x.style.display = "block";
+        }
+    }
+
+    // Add event listeners to all "Resolve" buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const resolveButtons = document.querySelectorAll('.action-button.edit');
+        resolveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const eventId = this.closest('tr').cells[0].textContent;
+                openResolveModal(eventId);
+            });
+        });
+    });
 </script>
 </body>
 </html>

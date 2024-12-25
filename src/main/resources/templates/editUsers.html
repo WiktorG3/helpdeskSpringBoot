@@ -22,9 +22,6 @@
                     <a th:href="@{/printResults}">Print Results</a>
                 </div>
             </li>
-            <li><a th:href="@{/register}">Register</a></li>
-            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
-            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
             <li><a th:href="@{/viewUsers}">Users</a></li>
             <li class="dropdown">
                 <a href="#" class="dropbutton">Events</a>
@@ -34,6 +31,9 @@
                     <a th:href="@{/viewEvents}">All Events</a>
                 </div>
             </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
         </ul>
     </nav>
     <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
@@ -42,44 +42,214 @@
 <main class="dashboard">
     <div class="page-header">
         <h2>Edit Users</h2>
+        <p>View and edit registered users</p>
     </div>
 
     <div class="data-grid-container">
         <div class="data-grid-header">
-            <h3>User List</h3>
+            <div class="search-box">
+                <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterTable()">
+            </div>
         </div>
+
         <div class="data-grid-wrapper">
             <table class="data-grid">
                 <thead>
                 <tr>
-                    <th>Username</th>
-                    <th>Name</th>
-                    <th>Surname</th>
-                    <th>Password</th>
-                    <th>Email</th>
-                    <th>Role</th>
+                    <th><a href="#" onclick="sortTable(0)">Username</a></th>
+                    <th><a href="#" onclick="sortTable(1)">Name</a></th>
+                    <th><a href="#" onclick="sortTable(2)">Surname</a></th>
+                    <th><a href="#" onclick="sortTable(3)">Email</a></th>
+                    <th><a href="#" onclick="sortTable(4)">Role</a></th>
                     <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="user : ${users}">
-                    <td th:text="${user.username}"></td>
-                    <td th:text="${user.name}"></td>
-                    <td th:text="${user.surname}"></td>
-                    <td>••••••••</td>
-                    <td th:text="${user.email}"></td>
-                    <td th:text="${user.role}"></td>
+                <tr th:each="user : ${usersPage.content}" th:attr="data-user-id=${user.id}">
+                    <td th:text="${user.username}" th:attr="data-username=${user.username}"></td>
+                    <td th:text="${user.name}" th:attr="data-name=${user.name}"></td>
+                    <td th:text="${user.surname}" th:attr="data-surname=${user.surname}"></td>
+                    <td th:text="${user.email}" th:attr="data-email=${user.email}"></td>
+                    <td th:text="${user.role}" th:attr="data-role=${user.role}"></td>
                     <td>
-                        <a th:href="@{/editUsers/{username}(username=${user.username})}" class="action-button edit">Edit</a>
+                        <button class="action-button edit" th:onclick="'openEditModal(' + ${user.id} + ')'">Edit</button>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
+
+        <div class="pagination" th:if="${usersPage.totalPages > 0}">
+            <span th:if="${usersPage.number > 0}">
+                <a th:href="@{'/editUsers?page=0&size=' + ${usersPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">First</a>
+                <a th:href="@{'/editUsers?page=' + ${usersPage.number - 1} + '&size=' + ${usersPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Previous</a>
+            </span>
+            <span th:each="i: ${#numbers.sequence(0, usersPage.totalPages - 1)}">
+                <a th:href="@{'/editUsers?page=' + ${i} + '&size=' + ${usersPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}"
+                   th:text="${i + 1}"
+                   th:class="${currentPage == i ? 'active' : ''}"></a>
+            </span>
+            <span th:if="${usersPage.number < usersPage.totalPages - 1}">
+                <a th:href="@{'/editUsers?page=' + ${usersPage.number + 1} + '&size=' + ${usersPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Next</a>
+                <a th:href="@{'/editUsers?page=' + ${usersPage.totalPages - 1} + '&size=' + ${usersPage.size} + '&sortBy=' + ${sortBy} + '&sortDir=' + ${sortDir}}">Last</a>
+            </span>
+        </div>
     </div>
 </main>
+<div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+<div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit User</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="user-details">
+                <p><strong>User ID:</strong> <span id="modalUserId"></span></p>
+            </div>
+            <form id="editForm" th:action="@{/editUsers}" method="post">
+                <input type="hidden" id="userId" name="id">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="surname">Surname:</label>
+                    <input type="text" id="surname" name="surname" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="role">Role:</label>
+                    <select id="role" name="role" required class="form-control">
+                        <option value="ROLE_USER">User</option>
+                        <option value="ROLE_ADMIN">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password (leave blank to keep current):</label>
+                    <input type="password" id="newPassword" name="newPassword" class="form-control">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="button secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="submit-button">Update User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<script>
+<script th:inline="javascript">
+    let currentUserData = null;
+
+    function openEditModal(userId) {
+        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+        if (!row) {
+            console.error('Row not found for user ID:', userId);
+            return;
+        }
+        currentUserData = {
+            id: userId,
+            username: row.querySelector('[data-username]').getAttribute('data-username'),
+            name: row.querySelector('[data-name]').getAttribute('data-name'),
+            surname: row.querySelector('[data-surname]').getAttribute('data-surname'),
+            email: row.querySelector('[data-email]').getAttribute('data-email'),
+            role: row.querySelector('[data-role]').getAttribute('data-role')
+        };
+
+        //Update modal
+        document.getElementById('modalUserId').textContent = currentUserData.id;
+        document.getElementById('userId').value = currentUserData.id;
+        document.getElementById('username').value = currentUserData.username;
+        document.getElementById('name').value = currentUserData.name;
+        document.getElementById('surname').value = currentUserData.surname;
+        document.getElementById('email').value = currentUserData.email;
+        document.getElementById('role').value = currentUserData.role;
+
+        //Show modal
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').style.display = 'none';
+        document.getElementById('editForm').reset();
+    }
+
+    //Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+    //Close modal when clicking x
+    document.querySelector('.close').onclick = closeModal;
+
+    function filterTable() {
+        const input = document.getElementById('userSearch');
+        const filter = input.value.toLowerCase();
+        const table = document.querySelector('.data-grid');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            let show = false;
+            const cells = rows[i].getElementsByTagName('td');
+            for (let j = 0; j < cells.length - 1; j++) {
+                const cellText = cells[j].textContent || cells[j].innerText;
+                if (cellText.toLowerCase().indexOf(filter) > -1) {
+                    show = true;
+                    break;
+                }
+            }
+            rows[i].style.display = show ? '' : 'none';
+        }
+    }
+
+    function sortTable(n) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.querySelector(".data-grid");
+        switching = true;
+        dir = "asc";
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (dir == "asc") {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount ++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
+
     function toggleNavbar() {
         let x = document.querySelector(".navbar-menu");
         if (x.style.display === "block") {
@@ -88,6 +258,16 @@
             x.style.display = "block";
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const editButtons = document.querySelectorAll('.action-button.edit');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.closest('tr').getAttribute('data-user-id');
+                openEditModal(userId);
+            });
+        });
+    });
 </script>
 </body>
 </html>

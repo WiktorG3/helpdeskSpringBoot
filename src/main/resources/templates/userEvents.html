@@ -23,9 +23,6 @@
                     <a th:href="@{/printResults}">Print Results</a>
                 </div>
             </li>
-            <li><a th:href="@{/register}">Register</a></li>
-            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
-            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
             <li><a th:href="@{/viewUsers}">Users</a></li>
             <li class="dropdown">
                 <a href="#" class="dropbutton">Events</a>
@@ -35,6 +32,9 @@
                     <a th:href="@{/viewEvents}">All Events</a>
                 </div>
             </li>
+            <li><a th:href="@{/register}">Register</a></li>
+            <li><a th:href="@{/login}" th:if="${#authentication == null}">Login</a></li>
+            <li><a th:href="@{/logout}" th:if="${#authentication != null}">Logout</a></li>
         </ul>
     </nav>
     <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">&#9776;</a>
@@ -50,15 +50,17 @@
         <div class="data-grid-header">
             <div class="search-filter-container">
                 <div class="search-box">
-                    <input type="text" id="eventSearch" placeholder="Search your events..." onkeyup="filterTable()">
+                    <input type="text" id="eventSearch" placeholder="Search events..." onkeyup="filterTable()">
                 </div>
-                <div class="search-box">
-                    <label for="dateFrom">From:</label>
-                    <input type="date" id="dateFrom">
-                    <label for="dateTo">To:</label>
-                    <input type="date" id="dateTo">
-                    <button onclick="filterByDate()" class="filter-button">Filter</button>
-                </div>
+            </div>
+        </div>
+        <div class="data-grid-header">
+            <div class="search-box">
+                <label for="dateFrom">From:</label>
+                <input type="date" id="dateFrom">
+                <label for="dateTo">To:</label>
+                <input type="date" id="dateTo">
+                <button onclick="filterByDate()" class="filter-button">Filter</button>
             </div>
         </div>
 
@@ -69,33 +71,112 @@
                     <th><a href="#" onclick="sortTable(0)">ID</a></th>
                     <th><a href="#" onclick="sortTable(1)">Category</a></th>
                     <th><a href="#" onclick="sortTable(2)">Title</a></th>
-                    <th>Description</th>
-                    <th>Emergency</th>
-                    <th>Detection Date</th>
-                    <th>Downtime</th>
+                    <th><a href="#" onclick="sortTable(3)">Description</a></th>
+                    <th><a href="#" onclick="sortTable(4)">Emergency</a></th>
+                    <th><a href="#" onclick="sortTable(5)">Detection Date</a></th>
+                    <th><a href="#" onclick="sortTable(6)">Downtime</a></th>
                     <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody id="eventTableBody">
-                <tr th:each="event : ${events}">
+                <tr th:each="event : ${eventsPage.content}"
+                    th:attr="data-event-id=${event.id}, data-event-title=${event.title}, data-event-category=${event.category}, data-event-description=${event.description}, data-event-emergency=${event.emergency}, data-event-detection-date=${#temporals.format(event.detectionDate, 'yyyy-MM-dd')}, data-event-downtime=${event.downtime}">
                     <td th:text="${event.id}"></td>
                     <td th:text="${event.category}"></td>
                     <td th:text="${event.title}"></td>
                     <td th:text="${event.description}"></td>
                     <td>
-                        <span th:class="${event.emergency ? 'status-badge emergency' : 'status-badge non-emergency'}"
-                              th:text="${event.emergency ? 'Emergency' : 'Non-Emergency'}">
-                        </span>
+        <span th:class="${event.emergency ? 'status-badge emergency' : 'status-badge non-emergency'}"
+              th:text="${event.emergency ? 'Emergency' : 'Non-Emergency'}"></span>
                     </td>
                     <td th:text="${#temporals.format(event.detectionDate, 'yyyy-MM-dd')}"></td>
                     <td th:text="${event.downtime + ' hours'}"></td>
                     <td class="actions">
-                        <button class="action-button edit" th:onclick="'editEvent(' + ${event.id} + ')'">Edit</button>
+                        <button class="action-button edit" th:onclick="'openEditModal(' + ${event.id} + ')'">Edit</button>
                         <button class="action-button delete" th:onclick="'deleteEvent(' + ${event.id} + ')'">Delete</button>
                     </td>
                 </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+    <div class="pagination" th:if="${eventsPage.totalPages > 0}">
+        <span th:if="${eventsPage.number > 0}">
+            <a th:href="@{'/userEvents?page=0&size=' + ${eventsPage.size} +
+                            '&sortBy=' + ${sortBy} +
+                            '&sortDir=' + ${sortDir}}">First</a>
+            <a th:href="@{'/userEvents?page=' + (${eventsPage.number} - 1) +
+                            '&size=' + ${eventsPage.size} +
+                            '&sortBy=' + ${sortBy} +
+                            '&sortDir=' + ${sortDir}}">Previous</a>
+        </span>
+        <span th:each="i : ${#numbers.sequence(0, eventsPage.totalPages - 1)}">
+            <a th:href="@{'/userEvents?page=' + ${i} +
+                            '&size=' + ${eventsPage.size} +
+                            '&sortBy=' + ${sortBy} +
+                            '&sortDir=' + ${sortDir}}"
+               th:text="${i + 1}"
+               th:class="${currentPage == i ? 'active' : ''}">
+            </a>
+        </span>
+        <span th:if="${eventsPage.number < eventsPage.totalPages - 1}">
+            <a th:href="@{'/userEvents?page=' + (${eventsPage.number} + 1) +
+                            '&size=' + ${eventsPage.size} +
+                            '&sortBy=' + ${sortBy} +
+                            '&sortDir=' + ${sortDir}}">Next</a>
+            <a th:href="@{'/userEvents?page=' + (${eventsPage.totalPages} - 1) +
+                            '&size=' + ${eventsPage.size} +
+                            '&sortBy=' + ${sortBy} +
+                            '&sortDir=' + ${sortDir}}">Last</a>
+        </span>
+    </div>
+
+    <div id="editModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Event</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Display read-only info about the event -->
+                <div class="event-details">
+                    <p><strong>Event ID:</strong> <span id="modalEventId"></span></p>
+                    <p><strong>Title:</strong> <span id="modalEventTitle"></span></p>
+                    <p><strong>Category:</strong> <span id="modalEventCategory"></span></p>
+                </div>
+
+                <!-- The form pointing to /userEvents/{id}, using POST -->
+                <form id="editForm" method="post">
+                    <!-- We'll fill this dynamically with the event ID -->
+                    <input type="hidden" id="hiddenEventId" name="id">
+
+                    <div class="form-group">
+                        <label for="editDescription">Description:</label>
+                        <textarea id="editDescription" name="description" rows="3" required class="form-control"
+                                  placeholder="Update the description here..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editDetectionDate">Detection Date:</label>
+                        <input type="date" id="editDetectionDate" name="detectionDate" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editDowntime">Downtime (hours):</label>
+                        <input type="number" id="editDowntime" name="downtime" class="form-control">
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="editEmergency" name="emergency" value="true">
+                        <label for="editEmergency">Is Emergency?</label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="button secondary" onclick="closeEditModal()">Cancel</button>
+                        <button type="submit" class="submit-button">Update Event</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </main>
@@ -126,7 +207,7 @@
 
     function deleteEvent(id) {
         if (confirm('Are you sure you want to delete this event?')) {
-            fetch('/api/events/' + id, {method: 'DELETE'})
+            fetch('/userEvents/' + id, {method: 'DELETE'})
                 .then(response => {
                     if (response.ok) {
                         window.location.reload();
@@ -197,29 +278,61 @@
         const rows = Array.from(table.querySelectorAll('tbody tr'));
         const headers = table.querySelectorAll('th a');
         const currentHeader = headers[n];
-        
-        // Toggle sort direction
         const isAscending = !currentHeader.classList.contains('asc');
-        
-        // Update header classes
         headers.forEach(header => header.classList.remove('asc', 'desc'));
         currentHeader.classList.add(isAscending ? 'asc' : 'desc');
-        
-        // Sort rows
         rows.sort((a, b) => {
             const aValue = a.cells[n].textContent.trim();
             const bValue = b.cells[n].textContent.trim();
-            return isAscending ? 
+            return isAscending ?
                 aValue.localeCompare(bValue, undefined, {numeric: true}) :
                 bValue.localeCompare(aValue, undefined, {numeric: true});
         });
-        
-        // Reorder table
+
         const tbody = table.querySelector('tbody');
         rows.forEach(row => tbody.appendChild(row));
     }
+
+
+    function openEditModal(eventId) {
+        const row = document.querySelector(`tr[data-event-id="${eventId}"]`);
+        if (!row) {
+            console.error('Row not found for event ID:', eventId);
+            return;
+        }
+
+        const title = row.getAttribute('data-event-title');
+        const category = row.getAttribute('data-event-category');
+        const description = row.getAttribute('data-event-description');
+        const emergency = row.getAttribute('data-event-emergency') === 'true';
+        const detectionDate = row.getAttribute('data-event-detection-date');
+        const downtime = row.getAttribute('data-event-downtime');
+
+        document.getElementById('modalEventId').textContent = eventId;
+        document.getElementById('modalEventTitle').textContent = title;
+        document.getElementById('modalEventCategory').textContent = category;
+
+        document.getElementById('hiddenEventId').value = eventId;
+        document.getElementById('editDescription').value = description;
+        document.getElementById('editDetectionDate').value = detectionDate;
+        document.getElementById('editDowntime').value = downtime;
+        document.getElementById('editEmergency').checked = emergency;
+        document.getElementById('editForm').action = `/userEvents/${eventId}`;
+
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        document.getElementById('editForm').reset();
+    }
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    };
 </script>
 
 </body>
 </html>
-
